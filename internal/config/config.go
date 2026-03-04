@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
 
@@ -18,10 +19,20 @@ type Config struct {
 }
 
 func Load() *Config {
-	godotenv.Load("../../config.env")
+	err := godotenv.Load("../../config.env")
+	if err != nil {
+		log.Fatalf("error: config.env file not exist in root folder")
+	}
 
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	dbPort, _ := strconv.Atoi(os.Getenv("DB_PORT"))
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		log.Fatalf("error: invalid PORT in config.env")
+	}
+
+	dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		log.Fatalf("error: invalid DB_PORT in config.env")
+	}
 
 	config := Config{
 		DBHost:     os.Getenv("DB_HOST"),
