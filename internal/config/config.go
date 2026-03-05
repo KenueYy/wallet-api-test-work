@@ -19,7 +19,7 @@ type Config struct {
 }
 
 func Load() *Config {
-	err := godotenv.Load("../../config.env")
+	err := godotenv.Load("config.env")
 	if err != nil {
 		log.Fatalf("error: config.env file not exist in root folder")
 	}

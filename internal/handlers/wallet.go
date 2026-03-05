@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
@@ -41,7 +42,8 @@ func createOperation(c *gin.Context) {
 
 	var wallet models.Wallet
 	if err := db.DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&wallet, "id=?", request.WalletID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(&wallet, "id=?", request.WalletID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				if request.Operation == models.WITHDRAW {
 					return ErrWalletNotFound

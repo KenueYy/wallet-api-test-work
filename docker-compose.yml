@@ -39,13 +39,23 @@ services:
       DB_SSLMODE: disable
     ports:
       - "8080:8080"
+  
+  tests:
+    image: golang:1.26
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres_test
+    command: ["go", "test", "-v", "./..."]
 
+  
   k6:
     image: grafana/k6:latest
     depends_on:
       - api
     volumes:
-      - ./k6:/scripts
+      - ./scripts:/scripts
     entrypoint: [ "k6", "run", "/scripts/wallet-test.js" ]
 
 volumes:

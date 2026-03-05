@@ -36,8 +36,8 @@ func initTestDB(t *testing.T) {
 	t.Helper()
 
 	cfg := &config.Config{
-		DBHost:     "localhost",
-		DBPort:     5433,
+		DBHost:     "postgres_test",
+		DBPort:     5432,
 		DBUser:     "postgres",
 		DBPassword: "password",
 		DBName:     "walletdb_test",

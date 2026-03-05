@@ -12,7 +12,7 @@ const (
 )
 
 type Operation struct {
-	WalletID  uuid.UUID     `json:"wallet_id" binding:"required,uuid"`
+	WalletID  uuid.UUID     `json:"walletId" binding:"required,uuid"`
 	Operation OperationType `json:"operationType" binding:"required,oneof=DEPOSIT WITHDRAW"`
 	Amount    int64         `json:"amount" binding:"required,gt=0"`
 }

@@ -1,14 +1,24 @@
-.PHONY: run test lint docker-up docker-down clean
+.PHONY: run test-rpc test-go test-all docker-up docker-down clean
 
 run:
 	docker-compose up -d postgres
-	air
 
-test:
-	go test -v ./...
+test-rpc:
+	docker-compose up -d postgres
+	docker-compose up -d api 
+	docker-compose up k6
 
-lint:
-	golangci-lint run
+test-go:
+	docker-compose up -d postgres_test
+	docker-compose run --rm tests
+
+test-all:
+	docker-compose up -d postgres
+	docker-compose up -d api 
+	docker-compose up k6
+	docker-compose up -d postgres_test
+	docker-compose run --rm tests
+	docker-compose down 
 
 docker-up:
 	docker-compose up -d
