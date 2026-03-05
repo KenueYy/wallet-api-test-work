@@ -1,10 +1,53 @@
-version: '3.8'
+version: "3.8"
+
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: wallet-postgres
     environment:
-      POSTGRES_DB: backend
-      POSTGRES_USER: user  
-      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: walletdb
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: wallet-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: walletdb_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: wallet-api
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: walletdb
+      DB_SSLMODE: disable
+    ports:
+      - "8080:8080"
+
+  k6:
+    image: grafana/k6:latest
+    depends_on:
+      - api
+    volumes:
+      - ./k6:/scripts
+    entrypoint: [ "k6", "run", "/scripts/wallet-test.js" ]
+
+volumes:
+  postgres_data:
+  postgres_test_data:
