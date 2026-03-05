@@ -1,0 +1,21 @@
+name: CI (Go tests + RPC test)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Docker Compose
+        run: |
+          docker compose version || docker-compose version || true
+
+      - name: Run all tests via Makefile
+        run: make test-all
