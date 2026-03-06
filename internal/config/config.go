@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -18,20 +18,33 @@ type Config struct {
 	Port       int
 }
 
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 func Load() *Config {
-	err := godotenv.Load("config.env")
-	if err != nil {
-		log.Fatalf("error: config.env file not exist in root folder")
+	if err := godotenv.Load("config.env"); err != nil {
+		logger.Error("failed to load config.env",
+			"file", "config.env",
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
-		log.Fatalf("error: invalid PORT in config.env")
+		logger.Error("invalid PORT in env",
+			"value", os.Getenv("PORT"),
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 
 	dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
 	if err != nil {
-		log.Fatalf("error: invalid DB_PORT in config.env")
+		logger.Error("invalid DB_PORT in env",
+			"value", os.Getenv("DB_PORT"),
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 
 	config := Config{
@@ -43,6 +56,13 @@ func Load() *Config {
 		DBSSLMode:  os.Getenv("DB_SSLMODE"),
 		Port:       port,
 	}
+
+	logger.Info("config loaded",
+		"db_host", config.DBHost,
+		"db_port", config.DBPort,
+		"db_name", config.DBName,
+		"port", config.Port,
+	)
 
 	return &config
 }

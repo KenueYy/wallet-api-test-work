@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 	"strconv"
 
 	"github.com/KenueYy/wallet-api/internal/config"
@@ -11,18 +12,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 func main() {
 	cfg := config.Load()
 
 	if err := db.Init(cfg); err != nil {
-		log.Fatal(err)
+		logger.Error("failed to initialize database",
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 
 	r := gin.Default()
 	handlers.RegisterRoutes(r)
 
-	log.Printf("Server port :%d", cfg.Port)
+	logger.Info("server starting",
+		"port", cfg.Port,
+	)
+
 	if err := r.Run(":" + strconv.Itoa(cfg.Port)); err != nil {
-		log.Fatal(err)
+		logger.Error("server stopped with error",
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 }
