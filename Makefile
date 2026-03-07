@@ -7,10 +7,12 @@ test-rpc:
 	docker compose up -d postgres
 	docker compose up -d api 
 	docker compose up k6
+	docker compose down 
 
 test-go:
 	docker compose up -d postgres_test
 	docker compose run --rm tests
+	docker compose down 
 
 test-all:
 	docker compose up -d postgres
