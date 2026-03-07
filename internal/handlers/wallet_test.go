@@ -155,3 +155,78 @@ func TestGetWallet_OK(t *testing.T) {
 	require.Equal(t, walletID, resp.ID)
 	require.Equal(t, int64(2000), resp.Balance)
 }
+
+func TestCreateOperation_WithdrawInsufficientFunds(t *testing.T) {
+	r := setupRouter(t)
+
+	walletID := uuid.New()
+
+	err := db.DB.Create(&models.Wallet{
+		ID:      walletID,
+		Balance: 0,
+	}).Error
+	require.NoError(t, err)
+
+	body := models.Operation{
+		WalletID:  walletID,
+		Operation: models.WITHDRAW,
+		Amount:    500,
+	}
+	b, _ := json.Marshal(body)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, createOperationRoute, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+
+	var wallet models.Wallet
+	err = db.DB.First(&wallet, "id=?", walletID).Error
+	require.NoError(t, err)
+	require.Equal(t, int64(0), wallet.Balance)
+}
+
+func TestGetWallet_InvalidID(t *testing.T) {
+	r := setupRouter(t)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, getWalletRoute+"123-321-123-000", nil)
+
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestCreateOperation_InvalidJSON(t *testing.T) {
+	r := setupRouter(t)
+
+	w := httptest.NewRecorder()
+	body := []byte(`{`)
+
+	req, _ := http.NewRequest(http.MethodPost, createOperationRoute, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestCreateOperation_MissingFields(t *testing.T) {
+	r := setupRouter(t)
+
+	payload := map[string]any{
+		"operationType": "DEPOSIT",
+		"amount":        0,
+	}
+	b, _ := json.Marshal(payload)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, createOperationRoute, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
